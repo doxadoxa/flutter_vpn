@@ -153,7 +153,7 @@ func disconnect(result: FlutterResult) {
             print("vpn load success")
         }
     }
-    
+
     result(nil)
     VPNStateHandler.updateState(3)
     vpnManager.connection.stopVPNTunnel()
@@ -185,6 +185,6 @@ func getState(result: FlutterResult) {
     case .invalid:
         result(VPNStates.disconnected)
     case .reasserting:
-        result(PNStates.reasserting)
+        result(VPNStates.reasserting)
     }
 }
