@@ -21,6 +21,8 @@ let serviceIdentifier = "MySerivice"
 let userAccount = "authenticatedUser"
 let accessGroup = "MySerivice"
 
+let vpnManager = NEVPNManager.shared();
+
 // Arguments for the keychain queries
 var kSecAttrAccessGroupSwift = NSString(format: kSecClass)
 
@@ -77,8 +79,19 @@ class KeychainService: NSObject {
 }
 
 @available(iOS 9.0, *)
+func prepare(result: FlutterResult) {
+    result(nil);
+    vpnManager.loadFromPreferences {(error) -> Void in 
+        if error != nil {
+            print("vpn load errror")
+        } else {
+            print("vpn load success")
+        }
+    }
+}
+
+@available(iOS 9.0, *)
 func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString) {
-    let vpnManager = NEVPNManager.shared();
     let kcs = KeychainService()
     result(nil)
 
@@ -144,15 +157,14 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
 }
 
 func disconnect(result: FlutterResult) {
-    let vpnManager = NEVPNManager.shared()
+    result(nil)
 
-    vpnManager.loadFromPreferences { @escaping (error) -> Void in 
+    vpnManager.loadFromPreferences {(error) -> Void in 
         if error != nil {
             print("vpn load errror")
         } else {
             print("vpn load success")
 
-            result(nil)
             VPNStateHandler.updateState(VPNStates.disconnecting)
             vpnManager.connection.stopVPNTunnel()
             VPNStateHandler.updateState(VPNStates.disconnected)
@@ -161,33 +173,22 @@ func disconnect(result: FlutterResult) {
 }
 
 func getState(result: FlutterResult) {
-    let vpnManager = NEVPNManager.shared()
+    let status = vpnManager.connection.status
 
-    vpnManager.loadFromPreferences { @escaping (error) -> Void in 
-        if error != nil {
-            print("vpn load errror")
-            result(VPNStates.reasserting)
-        } else {
-            print("vpn load success")
-        }
-
-        let status = vpnManager.connection.status
-
-        switch status {
-        case .connecting:
-            result(VPNStates.connecting)
-        case .connected:
-            result(VPNStates.connected)
-        case .disconnecting:
-            result(VPNStates.disconnecting)
-        case .disconnected:
-            result(VPNStates.disconnected)
-        case .invalid:
-            result(VPNStates.disconnected)
-        case .reasserting:
-            result(VPNStates.reasserting)
-        default:
-            result(VPNStates.reasserting)
-        }
-    }    
+    switch status {
+    case .connecting:
+        result(VPNStates.connecting)
+    case .connected:
+        result(VPNStates.connected)
+    case .disconnecting:
+        result(VPNStates.disconnecting)
+    case .disconnected:
+        result(VPNStates.disconnected)
+    case .invalid:
+        result(VPNStates.disconnected)
+    case .reasserting:
+        result(VPNStates.reasserting)
+    default:
+        result(VPNStates.reasserting)
+    }  
 }

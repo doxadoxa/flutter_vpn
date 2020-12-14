@@ -70,9 +70,11 @@ class FlutterVpn {
   /// When your connection was interrupted by another VPN connection,
   /// you should prepare again before reconnect.
   ///
-  /// Do nothing in iOS.
   static Future<bool> prepare() async {
-    if (!Platform.isAndroid) return true;
+    if (!Platform.isAndroid) {
+      await _channel.invokeMethod<void>('prepare');
+      return true;
+    }
     return await _channel.invokeMethod<bool>('prepare');
   }
 

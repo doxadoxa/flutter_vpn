@@ -34,6 +34,8 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
         disconnect(result: result)
       } else if call.method == "getCurrentState" {
         getState(result: result)
+      } else if call.method == "prepare" {
+        prepare(result: result)
       }
     }
   }
