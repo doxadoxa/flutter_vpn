@@ -186,5 +186,7 @@ func getState(result: FlutterResult) {
         result(VPNStates.disconnected)
     case .reasserting:
         result(VPNStates.reasserting)
+    default
+        result(VPNStates.reasserting)
     }
 }
