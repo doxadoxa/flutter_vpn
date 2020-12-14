@@ -151,13 +151,13 @@ func disconnect(result: FlutterResult) {
             print("vpn load errror")
         } else {
             print("vpn load success")
-        }
-    }
 
-    result(nil)
-    VPNStateHandler.updateState(3)
-    vpnManager.connection.stopVPNTunnel()
-    VPNStateHandler.updateState(0)
+            result(nil)
+            VPNStateHandler.updateState(VPNStates.disconnecting)
+            vpnManager.connection.stopVPNTunnel()
+            VPNStateHandler.updateState(VPNStates.disconnected)
+        }
+    }    
 }
 
 func getState(result: FlutterResult) {
@@ -166,27 +166,28 @@ func getState(result: FlutterResult) {
     vpnManager.loadFromPreferences { (error) -> Void in 
         if error != nil {
             print("vpn load errror")
+            result(VPNStates.reasserting)
         } else {
             print("vpn load success")
         }
-    }
 
-    let status = vpnManager.connection.status
+        let status = vpnManager.connection.status
 
-    switch status {
-    case .connecting:
-        result(VPNStates.connecting)
-    case .connected:
-        result(VPNStates.connected)
-    case .disconnecting:
-        result(VPNStates.disconnecting)
-    case .disconnected:
-        result(VPNStates.disconnected)
-    case .invalid:
-        result(VPNStates.disconnected)
-    case .reasserting:
-        result(VPNStates.reasserting)
-    default:
-        result(VPNStates.reasserting)
-    }
+        switch status {
+        case .connecting:
+            result(VPNStates.connecting)
+        case .connected:
+            result(VPNStates.connected)
+        case .disconnecting:
+            result(VPNStates.disconnecting)
+        case .disconnected:
+            result(VPNStates.disconnected)
+        case .invalid:
+            result(VPNStates.disconnected)
+        case .reasserting:
+            result(VPNStates.reasserting)
+        default:
+            result(VPNStates.reasserting)
+        }
+    }    
 }
