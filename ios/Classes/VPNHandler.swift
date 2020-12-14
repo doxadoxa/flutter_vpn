@@ -143,10 +143,10 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
     }
 }
 
-func disconnect(result: @escaping FlutterResult) {
+func disconnect(result: FlutterResult) {
     let vpnManager = NEVPNManager.shared()
 
-    vpnManager.loadFromPreferences { (error) -> Void in 
+    vpnManager.loadFromPreferences { @escaping (error) -> Void in 
         if error != nil {
             print("vpn load errror")
         } else {
@@ -160,10 +160,10 @@ func disconnect(result: @escaping FlutterResult) {
     }    
 }
 
-func getState(result: @escaping FlutterResult) {
+func getState(result: FlutterResult) {
     let vpnManager = NEVPNManager.shared()
 
-    vpnManager.loadFromPreferences { (error) -> Void in 
+    vpnManager.loadFromPreferences { @escaping (error) -> Void in 
         if error != nil {
             print("vpn load errror")
             result(VPNStates.reasserting)
