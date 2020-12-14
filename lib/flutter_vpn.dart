@@ -71,11 +71,16 @@ class FlutterVpn {
   /// you should prepare again before reconnect.
   ///
   static Future<bool> prepare() async {
-    if (!Platform.isAndroid) {
-      await _channel.invokeMethod<void>('prepare');
-      return true;
-    }
+    if (!Platform.isAndroid) return true;
     return await _channel.invokeMethod<bool>('prepare');
+  }
+
+  /// Initialize VPN connection service (NEVPNManager) on IOS
+  /// Run it before all another function to initiate connection
+  /// even on full restart
+  static Future<void> initManager() async {
+    if (!Platform.isIOS) return;
+    await _channel.invokeMethod<void>('initManager');
   }
 
   /// Check if vpn connection has been prepared. (Android only)
