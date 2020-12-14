@@ -77,8 +77,8 @@ class KeychainService: NSObject {
 }
 
 @available(iOS 9.0, *)
-func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NSString) {
-    let vpnManager = NEVPNManager.shared()
+func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString) {
+    let vpnManager = NEVPNManager.shared();
     let kcs = KeychainService()
     result(nil)
 
@@ -86,16 +86,16 @@ func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NS
 
         if error != nil {
             print("VPN Preferences error: 1")
-            VPNStateHandler.updateState(4)
+            VPNStateHandler.updateState(VPNStates.reasserting)
         } else {
-            VPNStateHandler.updateState(1)
+            VPNStateHandler.updateState(VPNStates.connecting)
             let p = NEVPNProtocolIKEv2()
 
-            p.username = usrname as String
-            p.remoteIdentifier = add as String
-            p.serverAddress = add as String
+            p.username = username as String
+            p.remoteIdentifier = address as String
+            p.serverAddress = address as String
 
-            kcs.save(key: "password", value: pwd as String)
+            kcs.save(key: "password", value: password as String)
             p.passwordReference = kcs.load(key: "password")
             p.authenticationMethod = NEVPNIKEAuthenticationMethod.none
 
@@ -108,13 +108,13 @@ func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NS
             vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
                 if error != nil {
                     print("VPN Preferences error: 2")
-                    VPNStateHandler.updateState(4)
+                    VPNStateHandler.updateState(VPNStates.reasserting)
                 } else {
                     vpnManager.loadFromPreferences(completionHandler: { error in
 
                         if error != nil {
                             print("VPN Preferences error: 2")
-                            VPNStateHandler.updateState(4)
+                            VPNStateHandler.updateState(VPNStates.reasserting)
                         } else {
                             var startError: NSError?
 
@@ -122,7 +122,7 @@ func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NS
                                 try vpnManager.connection.startVPNTunnel()
                             } catch let error as NSError {
                                 startError = error
-                                VPNStateHandler.updateState(4)
+                                VPNStateHandler.updateState(VPNStates.reasserting)
                                 print(startError)
                             } catch {
                                 print("Fatal Error")
@@ -133,7 +133,7 @@ func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NS
                                 print(startError)
                             } else {
                                 print("VPN started successfully..")
-                                VPNStateHandler.updateState(2)
+                                VPNStateHandler.updateState(VPNStates.connected)
                             }
                         }
                     })
@@ -143,29 +143,48 @@ func connectVPN(result: FlutterResult, usrname: NSString, pwd: NSString, add: NS
     }
 }
 
-func stopVPN(result: FlutterResult) {
+func disconnect(result: FlutterResult) {
     let vpnManager = NEVPNManager.shared()
+
+    vpnManager.loadFromPreferences { (error) -> Void in 
+        if error != nil {
+            print("vpn load errror")
+        } else {
+            print("vpn load success")
+        }
+    }
+    
     result(nil)
     VPNStateHandler.updateState(3)
     vpnManager.connection.stopVPNTunnel()
     VPNStateHandler.updateState(0)
 }
 
-func getVPNState(result: FlutterResult) {
+func getState(result: FlutterResult) {
     let vpnManager = NEVPNManager.shared()
+
+    vpnManager.loadFromPreferences { (error) -> Void in 
+        if error != nil {
+            print("vpn load errror")
+        } else {
+            print("vpn load success")
+        }
+    }
+
     let status = vpnManager.connection.status
+
     switch status {
     case .connecting:
-        result(1)
+        result(VPNStates.connecting)
     case .connected:
-        result(2)
+        result(VPNStates.connected)
     case .disconnecting:
-        result(3)
+        result(VPNStates.disconnecting)
     case .disconnected:
-        result(0)
+        result(VPNStates.disconnected)
     case .invalid:
-        result(0)
+        result(VPNStates.disconnected)
     case .reasserting:
-        result(4)
+        result(PNStates.reasserting)
     }
 }
