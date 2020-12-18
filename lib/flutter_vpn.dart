@@ -51,14 +51,15 @@ class FlutterVpn {
       .receiveBroadcastStream()
       .map((e) => FlutterVpnState.values[e]);
 
-  /// Return true, when connection is active ([FlutterVpnState.connected])
-  /// Drops false otherwise
-  /// It's automatically check connection every 1 second
-  /// Function will use for dropping connection into an app, when iOS or server
-  /// drops connection outside
-  static Stream<Future<bool>> get isConnectionActive =>
-      Stream<Future<bool>>.periodic(Duration(seconds: 1),
-          (_) async => await currentState == FlutterVpnState.connected);
+  /// Receive state change from VPN service periodiacally (once a sec).
+  ///
+  /// Can only be listened once.
+  /// If have more than one subscription, only the last subscription can receive
+  /// events.
+  ///
+  static Stream<Future<FlutterVpnState>> get onPeriodicStateChanged =>
+      Stream<Future<FlutterVpnState>>.periodic(
+          Duration(seconds: 1), (_) async => await currentState);
 
   /// Get current state.
   static Future<FlutterVpnState> get currentState async => FlutterVpnState
