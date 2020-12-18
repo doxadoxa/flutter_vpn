@@ -58,7 +58,7 @@ class FlutterVpn {
   /// drops connection outside
   static Stream<Future<bool>> get isConnectionActive =>
       Stream<Future<bool>>.periodic(Duration(seconds: 5),
-          (_) async => await currentState != FlutterVpnState.connected);
+          (_) async => await currentState == FlutterVpnState.connected);
 
   /// Get current state.
   static Future<FlutterVpnState> get currentState async => FlutterVpnState
