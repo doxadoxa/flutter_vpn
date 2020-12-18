@@ -57,7 +57,7 @@ class FlutterVpn {
   /// Function will use for dropping connection into an app, when iOS or server
   /// drops connection outside
   static Stream<Future<bool>> get isConnectionActive =>
-      Stream<Future<bool>>.periodic(Duration(seconds: 5),
+      Stream<Future<bool>>.periodic(Duration(seconds: 1),
           (_) async => await currentState == FlutterVpnState.connected);
 
   /// Get current state.
