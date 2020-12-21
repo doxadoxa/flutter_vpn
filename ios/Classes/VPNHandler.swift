@@ -116,7 +116,7 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             p.disconnectOnSleep = false
 
             vpnManager.protocolConfiguration = p
-            self.vpnManager.localizedDescription = "Wall One Privacy"
+            vpnManager.localizedDescription = "Wall One Privacy"
             vpnManager.isEnabled = true
             vpnManager.isOnDemandEnabled = true
 
