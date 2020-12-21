@@ -116,7 +116,17 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             p.disconnectOnSleep = false
 
             vpnManager.protocolConfiguration = p
+            self.vpnManager.localizedDescription = "Wall One Privacy"
             vpnManager.isEnabled = true
+            vpnManager.isOnDemandEnabled = true
+
+            let connectRule = NEOnDemandRuleConnect();
+            connectRule.interfaceTypeMatch = .any
+
+            let disconnectRule = NEOnDemandRuleDisconnect();
+            disconnectRule.interfaceTypeMatch = .any
+
+            vpnManager.onDemandRules = [connectRule, disconnectRule];
 
             vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
                 if error != nil {
