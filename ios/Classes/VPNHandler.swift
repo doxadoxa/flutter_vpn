@@ -128,7 +128,7 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             
             let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
                                                                      andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
-            evaluationRule.useDNSServers = [primaryDNS, secondaryDNS]
+            evaluationRule.useDNSServers = [primaryDNS as String, secondaryDNS as String]
             
             let onDemandEvaluationRule = NEOnDemandRuleEvaluateConnection()
             onDemandEvaluationRule.connectionRules = [evaluationRule]
