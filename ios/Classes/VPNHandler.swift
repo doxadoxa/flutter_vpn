@@ -81,23 +81,6 @@ final class VpnManager: NSObject {
   
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
-    
-    
-    if self.vpnManager.connection.status == NEVPNStatus.invalid {
-      self.vpnManager = NETunnelProviderManager();
-      self.vpnManager.protocolConfiguration = NETunnelProviderProtocol()
-			self.vpnManager.localizedDescription = "Wall One Privacy"
-			self.vpnManager.protocolConfiguration?.serverAddress = "TunnelServer"
-      self.vpnManager.saveToPreferences {(error) -> Void in 
-        if error != nil {
-          result(FlutterError(code: "Save new error", message: error?.localizedDescription, details: nil))
-        }
-      }
-
-      result(nil)
-      return
-    }
-
     result(nil)
 
     self.vpnManager.loadFromPreferences {(error) -> Void in
@@ -118,6 +101,10 @@ final class VpnManager: NSObject {
         VPNStateHandler.updateState(VPNStates.reasserting)
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
+        if self.vpnManager.connection.status == NEVPNStatus.invalid {
+          self.vpnManager = NEVPNManager()
+        }
+
         VPNStateHandler.updateState(VPNStates.connecting)
         let p = NEVPNProtocolIKEv2()
 
@@ -142,7 +129,8 @@ final class VpnManager: NSObject {
         let connectRule = NEOnDemandRuleConnect()
         connectRule.interfaceTypeMatch = .any
         
-        let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"], andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
+        let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"], 
+          andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
       
         evaluationRule.useDNSServers = [primaryDNS as! String, secondaryDNS as! String]
         
