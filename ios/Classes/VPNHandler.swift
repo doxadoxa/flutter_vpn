@@ -91,17 +91,9 @@ func prepare(result: FlutterResult) {
 }
 
 @available(iOS 9.0, *)
-func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString? = nil, secondaryDNS: NSString? = nil) {
+func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString? = "1.1.1.1", secondaryDNS: NSString? = "1.0.0.1") {
     let kcs = KeychainService()
     result(nil)
-    
-    if (primaryDNS == nil) {
-        primaryDNS = "1.1.1.1"
-    }
-    
-    if (secondaryDNS == nil) {
-        secondaryDNS = "1.0.0.1"
-    }
 
     vpnManager.loadFromPreferences { (error) -> Void in
 
