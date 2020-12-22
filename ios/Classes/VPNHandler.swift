@@ -78,14 +78,15 @@ class KeychainService: NSObject {
 
 final class VpnManager: NSObject {
   var vpnManager = NEVPNManager.shared();
-
-  if vpnManager.connection.status = NEVPNStatus.invalid {
-    vpnManager = NEVPNManager()
-  }
   
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
     result(nil);
+    
+    if vpnManager.connection.status = NEVPNStatus.invalid {
+      vpnManager = NEVPNManager()
+    }
+
     self.vpnManager.loadFromPreferences {(error) -> Void in
       if error != nil {
         result(FlutterError(code: "Prepare error", message: error?.localizedDescription, details: nil))
