@@ -150,7 +150,7 @@ final class VpnManager: NSObject {
               if error != nil {
                 print("VPN Preferences error: 2")
                 VPNStateHandler.updateState(VPNStates.reasserting)
-                result(FlutterError(code: "Load 2 Error", message: error?.localizedDescription, details: error?))
+                result(FlutterError(code: "Load 2 Error", message: error?.localizedDescription, details: nil))
               } else {
                 var startError: NSError?
 
