@@ -102,7 +102,7 @@ final class VpnManager: NSObject {
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
         if self.vpnManager.connection.status == NEVPNStatus.invalid {
-          self.vpnManager = NEVPNManager()
+          self.vpnManager = NETunnelProviderManager()
         }
 
         VPNStateHandler.updateState(VPNStates.connecting)
