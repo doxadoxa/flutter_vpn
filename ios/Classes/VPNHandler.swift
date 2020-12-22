@@ -91,7 +91,7 @@ final class VpnManager: NSObject {
   }
 
   @available(iOS 9.0, *)
-  func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString? = "8.8.8.8", secondaryDNS: NSString? = "8.8.4.4") {
+  func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString = "8.8.8.8", secondaryDNS: NSString = "8.8.4.4") {
     let kcs = KeychainService()
 
     self.vpnManager.loadFromPreferences { (error) -> Void in
@@ -129,10 +129,10 @@ final class VpnManager: NSObject {
         let connectRule = NEOnDemandRuleConnect()
         connectRule.interfaceTypeMatch = .any
         
-        let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"], 
+        let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
           andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
       
-        evaluationRule.useDNSServers = [primaryDNS as! String, secondaryDNS as! String]
+        evaluationRule.useDNSServers = [primaryDNS as String, secondaryDNS as String]
         
         let onDemandEvaluationRule = NEOnDemandRuleEvaluateConnection()
         onDemandEvaluationRule.connectionRules = [evaluationRule]
@@ -151,7 +151,7 @@ final class VpnManager: NSObject {
               if error != nil {
                 print("VPN Preferences error: 2")
                 VPNStateHandler.updateState(VPNStates.reasserting)
-                result(FlutterError(code: "Load 2 Error", message: error?.localizedDescription, details: nil))
+                result(FlutterError(code: "Reload Error", message: error?.localizedDescription, details: nil))
               } else {
                 var startError: NSError?
 
@@ -160,7 +160,7 @@ final class VpnManager: NSObject {
                 } catch let error as NSError {
                   startError = error
                   VPNStateHandler.updateState(VPNStates.reasserting)
-                  print(startError)
+                  result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } catch {
                   print("Fatal Error")
                   fatalError()
@@ -168,12 +168,12 @@ final class VpnManager: NSObject {
               
                 if startError != nil {
                   print("VPN Preferences error: 3")
-                  print(startError)
-                  result(FlutterError(code: "Start Error", message: error?.localizedDescription, details: nil))
+                  result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } else {
                   print("VPN started successfully..")
                   VPNStateHandler.updateState(VPNStates.connected)
                 }
+                
               }
             })
           }
