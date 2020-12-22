@@ -80,7 +80,7 @@ final class VpnManager: NSObject {
   let vpnManager = NEVPNManager.shared();
   
   @available(iOS 9.0, *)
-  func prepare(result: FlutterResult) {
+  func prepare(result: @escaping FlutterResult) {
     result(nil);
     self.vpnManager.loadFromPreferences {(error) -> Void in
       if error != nil {
@@ -176,7 +176,7 @@ final class VpnManager: NSObject {
     }
   }
 
-  func disconnect(result: FlutterResult) {
+  func disconnect(result: @escaping FlutterResult) {
     result(nil)
 
     self.vpnManager.loadFromPreferences {(error) -> Void in
@@ -202,7 +202,7 @@ final class VpnManager: NSObject {
     }
   }
 
-  func getState(result: FlutterResult) {
+  func getState(result: @escaping FlutterResult) {
     let status = self.vpnManager.connection.status
 
     switch status {
