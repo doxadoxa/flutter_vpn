@@ -77,7 +77,11 @@ class KeychainService: NSObject {
 }
 
 final class VpnManager: NSObject {
-  let vpnManager = NEVPNManager.shared();
+  var vpnManager = NEVPNManager.shared();
+
+  if vpnManager.connection.status = NEVPNStatus.invalid {
+    vpnManager = NEVPNManager()
+  }
   
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
@@ -145,7 +149,7 @@ final class VpnManager: NSObject {
               if error != nil {
                 print("VPN Preferences error: 2")
                 VPNStateHandler.updateState(VPNStates.reasserting)
-                result(FlutterError(code: "Load 2 Error", message: error?.localizedDescription, details: nil))
+                result(FlutterError(code: "Load 2 Error", message: error?.localizedDescription, details: error?))
               } else {
                 var startError: NSError?
 
