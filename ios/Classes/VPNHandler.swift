@@ -83,8 +83,8 @@ final class VpnManager: NSObject {
   func prepare(result: @escaping FlutterResult) {
     result(nil);
     
-    if vpnManager.connection.status = NEVPNStatus.invalid {
-      vpnManager = NEVPNManager()
+    if self.vpnManager.connection.status == NEVPNStatus.invalid {
+      self.vpnManager = NEVPNManager()
     }
 
     self.vpnManager.loadFromPreferences {(error) -> Void in
