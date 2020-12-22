@@ -111,12 +111,14 @@ class FlutterVpn {
   /// MTU is only available on android.
   static Future<Null> simpleConnect(
       String address, String username, String password,
-      {int mtu = 1400}) async {
+      {int mtu = 1400, String primaryDNS, String secondaryDNS}) async {
     await _channel.invokeMethod('connect', {
       'address': address,
       'username': username,
       'password': password,
-      'mtu': mtu.toString()
+      'mtu': mtu.toString(),
+      'primaryDNS': primaryDNS,
+      'secondaryDNS': secondaryDNS
     });
   }
 }

@@ -91,9 +91,17 @@ func prepare(result: FlutterResult) {
 }
 
 @available(iOS 9.0, *)
-func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString) {
+func connect(result: FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString? = nil, secondaryDNS: NSString? = nil) {
     let kcs = KeychainService()
     result(nil)
+    
+    if (primaryDNS == nil) {
+        primaryDNS = "1.1.1.1"
+    }
+    
+    if (secondaryDNS == nil) {
+        secondaryDNS = "1.0.0.1"
+    }
 
     vpnManager.loadFromPreferences { (error) -> Void in
 
@@ -120,13 +128,21 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             vpnManager.isEnabled = true
             vpnManager.isOnDemandEnabled = true
 
-            let connectRule = NEOnDemandRuleConnect();
+            let connectRule = NEOnDemandRuleConnect()
             connectRule.interfaceTypeMatch = .any
-
-            let disconnectRule = NEOnDemandRuleDisconnect();
+            
+            let disconnectRule = NEOnDemandRuleDisconnect()
             disconnectRule.interfaceTypeMatch = .any
+            
+            let evaluationRule = NEEvaluateConnectionRule(matchDomains: TLDList.tlds,
+                                                                     andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
+            evaluationRule.useDNSServers = [primaryDNS, secondaryDNS]
+            
+            let onDemandEvaluationRule = NEOnDemandRuleEvaluateConnection()
+            onDemandEvaluationRule.connectionRules = [evaluationRule]
+            onDemandEvaluationRule.interfaceTypeMatch = NEOnDemandRuleInterfaceType.any
 
-            vpnManager.onDemandRules = [connectRule, disconnectRule];
+            vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule];
 
             vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
                 if error != nil {
