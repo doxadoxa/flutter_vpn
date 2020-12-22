@@ -25,17 +25,19 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: channel)
     stateChannel.setStreamHandler(VPNStateHandler() as! FlutterStreamHandler & NSObjectProtocol)
     
+    let manager = VpnManager()
+    
     channel.setMethodCallHandler {
-      (call: FlutterMethodCall, result: FlutterResult) -> Void in
+      (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "connect" {
         let args = call.arguments! as! [NSString: NSString]
-        connect(result: result, username: args["username"]!, password: args["password"]!, address: args["address"]!, primaryDNS: args["primaryDNS"], secondaryDNS: args["secondaryDNS"])
+        manager.connect(result: result, username: args["username"]!, password: args["password"]!, address: args["address"]!, primaryDNS: args["primaryDNS"], secondaryDNS: args["secondaryDNS"])
       } else if call.method == "disconnect" {
-        disconnect(result: result)
+        manager.disconnect(result: result)
       } else if call.method == "getCurrentState" {
-        getState(result: result)
+        manager.getState(result: result)
       } else if call.method == "initManager" {
-        prepare(result: result)
+        manager.prepare(result: result)
       }
     }
   }
