@@ -182,11 +182,20 @@ func disconnect(result: FlutterResult) {
             print("vpn load errror")
         } else {
             print("vpn load success")
-
-            VPNStateHandler.updateState(VPNStates.disconnecting)
+            
             vpnManager.isOnDemandEnabled = false
-            vpnManager.connection.stopVPNTunnel()
-            VPNStateHandler.updateState(VPNStates.disconnected)
+            vpnManager.onDemandRules = []
+            
+            vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
+                if error != nil {
+                    print("VPN Preferences error: 2")
+                    VPNStateHandler.updateState(VPNStates.reasserting)
+                } else {
+                    VPNStateHandler.updateState(VPNStates.disconnecting)
+                    vpnManager.connection.stopVPNTunnel()
+                    VPNStateHandler.updateState(VPNStates.disconnected)
+                }
+            })
         }
     }    
 }
