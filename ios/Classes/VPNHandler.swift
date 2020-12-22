@@ -84,19 +84,7 @@ final class VpnManager: NSObject {
     result(nil)
     
     if self.vpnManager.connection.status == NEVPNStatus.invalid {
-      self.vpnManager.removeFromPreferences {(error) -> Void in 
-        if error != nil {
-          result(FlutterError(code: "Remove error", message: error?.localizedDescription, details: nil))
-          return
-        }
-
-        self.vpnManager.loadFromPreferences {(error) -> Void in
-          if error != nil {
-            result(FlutterError(code: "Prepare error", message: error?.localizedDescription, details: nil))
-          }
-        }
-      }
-
+      self.vpnManager = NETunnelProviderManager();
       return
     }
 
