@@ -81,12 +81,24 @@ final class VpnManager: NSObject {
   
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
-    result(nil)
+    
     
     if self.vpnManager.connection.status == NEVPNStatus.invalid {
       self.vpnManager = NETunnelProviderManager();
+      self.vpnManager.protocolConfiguration = NETunnelProviderProtocol()
+			self.vpnManager.localizedDescription = "Wall One Privacy"
+			self.vpnManager.protocolConfiguration?.serverAddress = "TunnelServer"
+      self.vpnManager.saveToPreferences {(error) -> Void in 
+        if error != nil {
+          result(FlutterError(code: "Save new error", message: error?.localizedDescription, details: nil))
+        }
+      }
+
+      result(nil)
       return
     }
+
+    result(nil)
 
     self.vpnManager.loadFromPreferences {(error) -> Void in
       if error != nil {
