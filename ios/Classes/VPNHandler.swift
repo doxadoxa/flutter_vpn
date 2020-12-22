@@ -102,7 +102,7 @@ final class VpnManager: NSObject {
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
         if self.vpnManager.connection.status == NEVPNStatus.invalid {
-          self.vpnManager = NETunnelProviderManager()
+          self.vpnManager = NEVPNManager()
         }
 
         VPNStateHandler.updateState(VPNStates.connecting)
@@ -128,6 +128,9 @@ final class VpnManager: NSObject {
 
         let connectRule = NEOnDemandRuleConnect()
         connectRule.interfaceTypeMatch = .any
+
+        let disconnectRule = NEOnDemandRuleDisconnect()
+        disconnectRule.interfaceTypeMatch = .any
         
         let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
           andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
@@ -138,7 +141,7 @@ final class VpnManager: NSObject {
         onDemandEvaluationRule.connectionRules = [evaluationRule]
         onDemandEvaluationRule.interfaceTypeMatch = NEOnDemandRuleInterfaceType.any
 
-        self.vpnManager.onDemandRules = [connectRule, onDemandEvaluationRule]
+        self.vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule]
 
         self.vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
           if error != nil {
