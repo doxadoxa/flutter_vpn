@@ -123,8 +123,8 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             let connectRule = NEOnDemandRuleConnect()
             connectRule.interfaceTypeMatch = .any
             
-            let disconnectRule = NEOnDemandRuleDisconnect()
-            disconnectRule.interfaceTypeMatch = .any
+            //let disconnectRule = NEOnDemandRuleDisconnect()
+            //disconnectRule.interfaceTypeMatch = .any
             
             let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
                                                                      andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
@@ -134,7 +134,7 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             onDemandEvaluationRule.connectionRules = [evaluationRule]
             onDemandEvaluationRule.interfaceTypeMatch = NEOnDemandRuleInterfaceType.any
 
-            vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule];
+            vpnManager.onDemandRules = [connectRule, onDemandEvaluationRule];
 
             vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
                 if error != nil {
