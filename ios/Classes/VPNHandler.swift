@@ -126,7 +126,7 @@ func connect(result: FlutterResult, username: NSString, password: NSString, addr
             let disconnectRule = NEOnDemandRuleDisconnect()
             disconnectRule.interfaceTypeMatch = .any
             
-            let evaluationRule = NEEvaluateConnectionRule(matchDomains: TLDList.tlds,
+            let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
                                                                      andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
             evaluationRule.useDNSServers = [primaryDNS, secondaryDNS]
             
