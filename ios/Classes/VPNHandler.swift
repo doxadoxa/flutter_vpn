@@ -101,8 +101,8 @@ final class VpnManager: NSObject {
         VPNStateHandler.updateState(VPNStates.reasserting)
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
-        if self.vpnManager.connection.status == NEVPNStatus.invalid {
-          self.vpnManager = NEVPNManager()
+        if self?.vpnManager.connection.status == NEVPNStatus.invalid {
+          self?.vpnManager = NEVPNManager()
         }
 
         VPNStateHandler.updateState(VPNStates.connecting)
@@ -121,10 +121,10 @@ final class VpnManager: NSObject {
         p.useExtendedAuthentication = true
         p.disconnectOnSleep = false
 
-        self.vpnManager.protocolConfiguration = p
-        self.vpnManager.localizedDescription = "Wall One Privacy"
-        self.vpnManager.isEnabled = true
-        self.vpnManager.isOnDemandEnabled = true
+        self?.vpnManager.protocolConfiguration = p
+        self?.vpnManager.localizedDescription = "Wall One Privacy"
+        self?.vpnManager.isEnabled = true
+        self?.vpnManager.isOnDemandEnabled = true
 
         let connectRule = NEOnDemandRuleConnect()
         connectRule.interfaceTypeMatch = .any
@@ -141,15 +141,15 @@ final class VpnManager: NSObject {
         onDemandEvaluationRule.connectionRules = [evaluationRule]
         onDemandEvaluationRule.interfaceTypeMatch = NEOnDemandRuleInterfaceType.any
 
-        self.vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule]
+        self?.vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule]
 
-        self.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
+        self?.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
           if error != nil {
             print("VPN Preferences error: 2")
             VPNStateHandler.updateState(VPNStates.reasserting)
             result(FlutterError(code: "Save Error", message: error?.localizedDescription, details: nil))
           } else {
-            self.vpnManager.loadFromPreferences(completionHandler: { [weak self] (error) -> Void in
+            self?.vpnManager.loadFromPreferences(completionHandler: { [weak self] (error) -> Void in
 
               if error != nil {
                 print("VPN Preferences error: 2")
@@ -159,7 +159,7 @@ final class VpnManager: NSObject {
                 var startError: NSError?
 
                 do {
-                  try self.vpnManager.connection.startVPNTunnel()
+                  try self?.vpnManager.connection.startVPNTunnel()
                 } catch let error as NSError {
                   startError = error
                   VPNStateHandler.updateState(VPNStates.reasserting)
@@ -194,16 +194,16 @@ final class VpnManager: NSObject {
       } else {
         print("vpn load success")
           
-        self.vpnManager.isOnDemandEnabled = false
-        self.vpnManager.onDemandRules = []
+        self?.vpnManager.isOnDemandEnabled = false
+        self?.vpnManager.onDemandRules = []
         
-        self.vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
+        self?.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
           if error != nil {
             print("VPN Preferences error: 2")
             VPNStateHandler.updateState(VPNStates.reasserting)
           } else {
             VPNStateHandler.updateState(VPNStates.disconnecting)
-            self.vpnManager.connection.stopVPNTunnel()
+            self?.vpnManager.connection.stopVPNTunnel()
             VPNStateHandler.updateState(VPNStates.disconnected)
           }
         })
