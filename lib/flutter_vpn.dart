@@ -51,16 +51,6 @@ class FlutterVpn {
       .receiveBroadcastStream()
       .map((e) => FlutterVpnState.values[e]);
 
-  /// Receive state change from VPN service periodiacally (once a sec).
-  ///
-  /// Can only be listened once.
-  /// If have more than one subscription, only the last subscription can receive
-  /// events.
-  ///
-  static Stream<Future<FlutterVpnState>> get onPeriodicStateChanged =>
-      Stream<Future<FlutterVpnState>>.periodic(
-          Duration(seconds: 1), (_) async => await currentState);
-
   /// Get current state.
   static Future<FlutterVpnState> get currentState async => FlutterVpnState
       .values[await _channel.invokeMethod<int>('getCurrentState')];
@@ -111,14 +101,12 @@ class FlutterVpn {
   /// MTU is only available on android.
   static Future<Null> simpleConnect(
       String address, String username, String password,
-      {int mtu = 1400, String primaryDNS, String secondaryDNS}) async {
+      {int mtu = 1400}) async {
     await _channel.invokeMethod('connect', {
       'address': address,
       'username': username,
       'password': password,
-      'mtu': mtu.toString(),
-      'primaryDNS': primaryDNS,
-      'secondaryDNS': secondaryDNS
+      'mtu': mtu.toString()
     });
   }
 }

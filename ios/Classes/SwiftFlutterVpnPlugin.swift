@@ -31,7 +31,7 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "connect" {
         let args = call.arguments! as! [NSString: NSString]
-        manager.connect(result: result, username: args["username"]!, password: args["password"]!, address: args["address"]!, primaryDNS: args["primaryDNS"]!, secondaryDNS: args["secondaryDNS"]!)
+        manager.connect(result: result, username: args["username"]!, password: args["password"]!, address: args["address"]!)
       } else if call.method == "disconnect" {
         manager.disconnect(result: result)
       } else if call.method == "getCurrentState" {

@@ -97,7 +97,7 @@ final class VpnManager: NSObject {
   }
 
   @available(iOS 9.0, *)
-  public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString = "8.8.8.8", secondaryDNS: NSString = "8.8.4.4") {
+  public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString) {
     
     let kcs = KeychainService()
 
