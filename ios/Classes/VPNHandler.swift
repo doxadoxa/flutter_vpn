@@ -68,7 +68,7 @@ class KeychainService: NSObject {
 
     if status == errSecSuccess {
         if let data = result as! NSData? {
-            if let value = NSString(data: data as Data, encoding: String.Encoding.utf8.rawValue) {}
+          if NSString(data: data as Data, encoding: String.Encoding.utf8.rawValue) != nil {}
             return data as Data
         }
     }
@@ -77,42 +77,47 @@ class KeychainService: NSObject {
 }
 
 final class VpnManager: NSObject {
-  var vpnManager = NEVPNManager.shared();
-  
+  private let _vpnManager: NEVPNManager = NEVPNManager.shared()
+  private let _localizedDescription = "Wall One Privacy"
+
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
-    result(nil)
-
-    self.vpnManager.loadFromPreferences {(error) -> Void in
+    
+    
+    self._vpnManager.loadFromPreferences{ (error) -> Void in
       if error != nil {
         result(FlutterError(code: "Prepare error", message: error?.localizedDescription, details: nil))
+      } else {
+        VPNStateHandler.updateState(self.convertState(status: self._vpnManager.connection.status))
       }
+        
+      result(nil)
     }
+
   }
 
   @available(iOS 9.0, *)
-  func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString = "8.8.8.8", secondaryDNS: NSString = "8.8.4.4") {
+  public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString = "8.8.8.8", secondaryDNS: NSString = "8.8.4.4") {
+    
     let kcs = KeychainService()
 
-    self.vpnManager.loadFromPreferences { [weak self] (error) -> Void in
-
+    VPNStateHandler.updateState(VPNStates.connecting)
+    
+    self._vpnManager.loadFromPreferences { (error) -> Void in
+      
       if error != nil {
         print("VPN Preferences error: 1")
         VPNStateHandler.updateState(VPNStates.reasserting)
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
-        if self?.vpnManager.connection.status == NEVPNStatus.invalid {
-          self?.vpnManager = NEVPNManager()
-        }
-
-        VPNStateHandler.updateState(VPNStates.connecting)
+        let vpnManager = self._vpnManager
+        
         let p = NEVPNProtocolIKEv2()
 
         p.username = username as String
         p.remoteIdentifier = address as String
         p.serverAddress = address as String
         
-        p.deadPeerDetectionRate = .low
 
         kcs.save(key: "password", value: password as String)
         p.passwordReference = kcs.load(key: "password")
@@ -120,36 +125,28 @@ final class VpnManager: NSObject {
 
         p.useExtendedAuthentication = true
         p.disconnectOnSleep = false
+        p.deadPeerDetectionRate = .low
+        
 
-        self?.vpnManager.protocolConfiguration = p
-        self?.vpnManager.localizedDescription = "Wall One Privacy"
-        self?.vpnManager.isEnabled = true
-        self?.vpnManager.isOnDemandEnabled = true
+        vpnManager.protocolConfiguration = p
+        vpnManager.localizedDescription = self._localizedDescription
+        vpnManager.isEnabled = true
+        vpnManager.isOnDemandEnabled = true
 
         let connectRule = NEOnDemandRuleConnect()
         connectRule.interfaceTypeMatch = .any
 
-        let disconnectRule = NEOnDemandRuleDisconnect()
-        disconnectRule.interfaceTypeMatch = .any
-        
-        let evaluationRule = NEEvaluateConnectionRule(matchDomains: ["*.com", "*.net", "*.io", "*.me", "*.ru", "*.co", "*.uk"],
-          andAction: NEEvaluateConnectionRuleAction.connectIfNeeded)
+        vpnManager.onDemandRules = [connectRule]
       
-        evaluationRule.useDNSServers = [primaryDNS as String, secondaryDNS as String]
-        
-        let onDemandEvaluationRule = NEOnDemandRuleEvaluateConnection()
-        onDemandEvaluationRule.connectionRules = [evaluationRule]
-        onDemandEvaluationRule.interfaceTypeMatch = NEOnDemandRuleInterfaceType.any
 
-        self?.vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule]
-
-        self?.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
+        vpnManager.saveToPreferences { (error) -> Void in
           if error != nil {
             print("VPN Preferences error: 2")
             VPNStateHandler.updateState(VPNStates.reasserting)
             result(FlutterError(code: "Save Error", message: error?.localizedDescription, details: nil))
+            
           } else {
-            self?.vpnManager.loadFromPreferences(completionHandler: { [weak self] (error) -> Void in
+            vpnManager.loadFromPreferences { (error) -> Void in
 
               if error != nil {
                 print("VPN Preferences error: 2")
@@ -159,7 +156,7 @@ final class VpnManager: NSObject {
                 var startError: NSError?
 
                 do {
-                  try self?.vpnManager.connection.startVPNTunnel()
+                  try vpnManager.connection.startVPNTunnel()
                 } catch let error as NSError {
                   startError = error
                   VPNStateHandler.updateState(VPNStates.reasserting)
@@ -175,35 +172,39 @@ final class VpnManager: NSObject {
                 } else {
                   print("VPN started successfully..")
                   VPNStateHandler.updateState(VPNStates.connected)
+                  result(nil)
                 }
-                
               }
-            })
+            }
           }
-        })
+        }
       }
     }
   }
 
-  func disconnect(result: @escaping FlutterResult) {
+  public func disconnect(result: @escaping FlutterResult) {
     result(nil)
 
-    self.vpnManager.loadFromPreferences {[weak self] (error) -> Void in
+    self._vpnManager.loadFromPreferences {[weak self] (error) -> Void in
+      guard let self = self else { return }
+      
       if error != nil {
         print("vpn load errror")
       } else {
         print("vpn load success")
           
-        self?.vpnManager.isOnDemandEnabled = false
-        self?.vpnManager.onDemandRules = []
+        self._vpnManager.isOnDemandEnabled = false
+        self._vpnManager.onDemandRules = []
         
-        self?.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
+        self._vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
+          guard let self = self else { return }
+          
           if error != nil {
             print("VPN Preferences error: 2")
             VPNStateHandler.updateState(VPNStates.reasserting)
           } else {
             VPNStateHandler.updateState(VPNStates.disconnecting)
-            self?.vpnManager.connection.stopVPNTunnel()
+            self._vpnManager.connection.stopVPNTunnel()
             VPNStateHandler.updateState(VPNStates.disconnected)
           }
         })
@@ -211,24 +212,27 @@ final class VpnManager: NSObject {
     }
   }
 
-  func getState(result: @escaping FlutterResult) {
-    let status = self.vpnManager.connection.status
-
+  public func getState(result: @escaping FlutterResult) {
+    let status = self._vpnManager.connection.status
+    result(convertState(status: status).rawValue)
+  }
+  
+  private func convertState(status: NEVPNStatus) -> VPNStates {
     switch status {
-    case .connecting:
-        result(VPNStates.connecting)
-    case .connected:
-        result(VPNStates.connected)
-    case .disconnecting:
-        result(VPNStates.disconnecting)
-    case .disconnected:
-        result(VPNStates.disconnected)
-    case .invalid:
-        result(VPNStates.disconnected)
-    case .reasserting:
-        result(VPNStates.reasserting)
-    default:
-        result(VPNStates.reasserting)
+      case .connecting:
+        return VPNStates.connecting
+      case .connected:
+        return VPNStates.connected
+      case .disconnecting:
+        return VPNStates.disconnecting
+      case .disconnected:
+        return VPNStates.disconnected
+      case .invalid:
+        return VPNStates.disconnected
+      case .reasserting:
+        return VPNStates.reasserting
+      default:
+        return VPNStates.reasserting
     }
   }
 

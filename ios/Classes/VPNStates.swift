@@ -1,9 +1,9 @@
 import Foundation
 
-class VPNStates {
-    static let connecting = 1;
-    static let connected = 2;
-    static let disconnecting = 3;
-    static let disconnected = 0;
-    static let reasserting = 4;
+public enum VPNStates: Int {
+    case connecting = 1;
+    case connected = 2;
+    case disconnecting = 3;
+    case disconnected = 0;
+    case reasserting = 4;
 }

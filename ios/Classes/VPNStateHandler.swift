@@ -17,9 +17,9 @@ import Foundation
 class VPNStateHandler: FlutterStreamHandler {
     static var _sink: FlutterEventSink?
 
-    static func updateState(_ newState: Int) {
+    static func updateState(_ newState: VPNStates) {
         if let sink = _sink {
-            sink(newState)
+          sink(newState.rawValue)
         }
     }
 
