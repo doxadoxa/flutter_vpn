@@ -94,7 +94,7 @@ final class VpnManager: NSObject {
   func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString, primaryDNS: NSString = "8.8.8.8", secondaryDNS: NSString = "8.8.4.4") {
     let kcs = KeychainService()
 
-    self.vpnManager.loadFromPreferences { (error) -> Void in
+    self.vpnManager.loadFromPreferences { [weak self] (error) -> Void in
 
       if error != nil {
         print("VPN Preferences error: 1")
@@ -143,13 +143,13 @@ final class VpnManager: NSObject {
 
         self.vpnManager.onDemandRules = [connectRule, disconnectRule, onDemandEvaluationRule]
 
-        self.vpnManager.saveToPreferences(completionHandler: { (error) -> Void in
+        self.vpnManager.saveToPreferences(completionHandler: { [weak self] (error) -> Void in
           if error != nil {
             print("VPN Preferences error: 2")
             VPNStateHandler.updateState(VPNStates.reasserting)
             result(FlutterError(code: "Save Error", message: error?.localizedDescription, details: nil))
           } else {
-            self.vpnManager.loadFromPreferences(completionHandler: { error in
+            self.vpnManager.loadFromPreferences(completionHandler: { [weak self] (error) -> Void in
 
               if error != nil {
                 print("VPN Preferences error: 2")
@@ -188,7 +188,7 @@ final class VpnManager: NSObject {
   func disconnect(result: @escaping FlutterResult) {
     result(nil)
 
-    self.vpnManager.loadFromPreferences {(error) -> Void in
+    self.vpnManager.loadFromPreferences {[weak self] (error) -> Void in
       if error != nil {
         print("vpn load errror")
       } else {
