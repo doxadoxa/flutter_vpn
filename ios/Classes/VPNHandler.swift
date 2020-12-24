@@ -109,7 +109,8 @@ final class VpnManager: NSObject {
 
   @available(iOS 9.0, *)
   public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString) {
-    
+    self._timer?.invalidate()
+    self._timer = nil
     
     let kcs = KeychainService()
 
