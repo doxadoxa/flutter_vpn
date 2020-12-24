@@ -64,23 +64,24 @@ class FlutterVpn {
     return CharonErrorState.values[state];
   }
 
-  /// Prepare for vpn connection. (Android only)
+  /// Prepare for VPN connection iOS & Android
   ///
   /// For first connection it will show a dialog to ask for permission.
   /// When your connection was interrupted by another VPN connection,
   /// you should prepare again before reconnect.
   ///
   static Future<bool> prepare() async {
-    if (!Platform.isAndroid) return true;
     return await _channel.invokeMethod<bool>('prepare');
   }
 
-  /// Initialize VPN connection service (NEVPNManager) on IOS
-  /// Run it before all another function to initiate connection
-  /// even on full restart
-  static Future<void> initManager() async {
-    if (!Platform.isIOS) return;
-    await _channel.invokeMethod<void>('initManager');
+  /// Prepare for VPN connection iOS & Android
+  ///
+  /// For first connection it will show a dialog to ask for permission.
+  /// When your connection was interrupted by another VPN connection,
+  /// you should prepare again before reconnect.
+  ///
+  static Future<bool> initManager() async {
+    return await _channel.invokeMethod<bool>('prepare');
   }
 
   /// Check if vpn connection has been prepared. (Android only)
