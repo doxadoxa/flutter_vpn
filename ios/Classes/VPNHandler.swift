@@ -102,13 +102,12 @@ final class VpnManager: NSObject {
     
     if self._timer == nil {
       DispatchQueue.main.async {
-        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        let timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { timer in
           print("TIMER RUN")
           self.state = VpnManager.convertState(status: self._vpnManager.connection.status)
         }
         
         timer.tolerance = 0.5
-        timer.fire()
               
         self._timer = timer;
       }
