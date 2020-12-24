@@ -100,7 +100,7 @@ final class VpnManager: NSObject {
       }
     }
     
-    initTimer()
+    self.initTimer()
   }
   
   deinit {
@@ -186,7 +186,7 @@ final class VpnManager: NSObject {
                   print("VPN started successfully..")
                   self.updateState(VPNStates.connected)
 
-                  initTimer(5)
+                  self.initTimer(5.0)
                   result(nil)
                 }
               }
