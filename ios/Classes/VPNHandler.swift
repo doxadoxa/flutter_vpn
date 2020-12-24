@@ -79,18 +79,45 @@ class KeychainService: NSObject {
 final class VpnManager: NSObject {
   private let _vpnManager: NEVPNManager = NEVPNManager.shared()
   private let _localizedDescription = "Wall One Privacy"
-
+  private var _timer: Timer?
+  
+  public var state: VPNStates = .disconnected {
+    didSet {
+      guard state != oldValue else { return }
+      
+      VPNStateHandler.updateState(state)
+    }
+  }
+  
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
     self._vpnManager.loadFromPreferences{ (error) -> Void in
       if error != nil {
         result(false)
       } else {
-        VPNStateHandler.updateState(self.convertState(status: self._vpnManager.connection.status))
-        self.registerStateObserver()
+        self.updateState(VpnManager.convertState(status: self._vpnManager.connection.status))
         result(true)
       }
     }
+    
+    if self._timer == nil {
+      DispatchQueue.main.async {
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+          print("TIMER RUN")
+          self.state = VpnManager.convertState(status: self._vpnManager.connection.status)
+        }
+        
+        timer.tolerance = 0.5
+        timer.fire()
+              
+        self._timer = timer;
+      }
+    }
+    
+  }
+  
+  deinit {
+    self._timer?.invalidate()
   }
 
   @available(iOS 9.0, *)
@@ -98,13 +125,13 @@ final class VpnManager: NSObject {
     
     let kcs = KeychainService()
 
-    VPNStateHandler.updateState(VPNStates.connecting)
+    self.updateState(VPNStates.connecting)
     
     self._vpnManager.loadFromPreferences { (error) -> Void in
       
       if error != nil {
         print("VPN Preferences error: 1")
-        VPNStateHandler.updateState(VPNStates.reasserting)
+        self.updateState(VPNStates.reasserting)
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
         let vpnManager = self._vpnManager
@@ -138,7 +165,7 @@ final class VpnManager: NSObject {
         vpnManager.saveToPreferences { (error) -> Void in
           if error != nil {
             print("VPN Preferences error: 2")
-            VPNStateHandler.updateState(VPNStates.reasserting)
+            self.updateState(VPNStates.reasserting)
             result(FlutterError(code: "Save Error", message: error?.localizedDescription, details: nil))
             
           } else {
@@ -146,7 +173,7 @@ final class VpnManager: NSObject {
 
               if error != nil {
                 print("VPN Preferences error: 2")
-                VPNStateHandler.updateState(VPNStates.reasserting)
+                self.updateState(VPNStates.reasserting)
                 result(FlutterError(code: "Reload Error", message: error?.localizedDescription, details: nil))
               } else {
                 var startError: NSError?
@@ -155,7 +182,7 @@ final class VpnManager: NSObject {
                   try vpnManager.connection.startVPNTunnel()
                 } catch let error as NSError {
                   startError = error
-                  VPNStateHandler.updateState(VPNStates.reasserting)
+                  self.updateState(VPNStates.reasserting)
                   result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } catch {
                   print("Fatal Error")
@@ -167,7 +194,7 @@ final class VpnManager: NSObject {
                   result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } else {
                   print("VPN started successfully..")
-                  VPNStateHandler.updateState(VPNStates.connected)
+                  self.updateState(VPNStates.connected)
                   result(nil)
                 }
               }
@@ -197,11 +224,11 @@ final class VpnManager: NSObject {
           
           if error != nil {
             print("VPN Preferences error: 2")
-            VPNStateHandler.updateState(VPNStates.reasserting)
+            self.updateState(VPNStates.reasserting)
           } else {
-            VPNStateHandler.updateState(VPNStates.disconnecting)
+            self.updateState(VPNStates.disconnecting)
             self._vpnManager.connection.stopVPNTunnel()
-            VPNStateHandler.updateState(VPNStates.disconnected)
+            self.updateState(VPNStates.disconnected)
           }
         })
       }
@@ -210,10 +237,14 @@ final class VpnManager: NSObject {
 
   public func getState(result: @escaping FlutterResult) {
     let status = self._vpnManager.connection.status
-    result(convertState(status: status).rawValue)
+    result(VpnManager.convertState(status: status).rawValue)
   }
   
-  private func convertState(status: NEVPNStatus) -> VPNStates {
+  private func updateState(_ state: VPNStates) {
+    self.state = state
+  }
+  
+  private static func convertState(status: NEVPNStatus) -> VPNStates {
     switch status {
       case .connecting:
         return VPNStates.connecting
@@ -231,12 +262,5 @@ final class VpnManager: NSObject {
         return VPNStates.reasserting
     }
   }
-
-  private func registerStateObserver() {
-    self._vpnManger.connection.status.observe(\NEVPNStatus) { status, change in
-      VPNStateHandler.updateState(self.convertState(status))
-    }
-  }
-
 }
 
