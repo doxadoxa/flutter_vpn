@@ -82,18 +82,15 @@ final class VpnManager: NSObject {
 
   @available(iOS 9.0, *)
   func prepare(result: @escaping FlutterResult) {
-    
-    
     self._vpnManager.loadFromPreferences{ (error) -> Void in
       if error != nil {
-        result(FlutterError(code: "Prepare error", message: error?.localizedDescription, details: nil))
+        result(false)
       } else {
         VPNStateHandler.updateState(self.convertState(status: self._vpnManager.connection.status))
+        registerStateObserver()
+        result(true)
       }
-        
-      result(nil)
     }
-
   }
 
   @available(iOS 9.0, *)
@@ -126,7 +123,6 @@ final class VpnManager: NSObject {
         p.useExtendedAuthentication = true
         p.disconnectOnSleep = false
         p.deadPeerDetectionRate = .low
-        
 
         vpnManager.protocolConfiguration = p
         vpnManager.localizedDescription = self._localizedDescription
@@ -233,6 +229,12 @@ final class VpnManager: NSObject {
         return VPNStates.reasserting
       default:
         return VPNStates.reasserting
+    }
+  }
+
+  private func registerStateObserver() {
+    self._vpnManger.observe(\NEVPNManager.connection.status, options: .new) { status, change in
+      VPNStateHandeler.updateState(convertState(status))
     }
   }
 

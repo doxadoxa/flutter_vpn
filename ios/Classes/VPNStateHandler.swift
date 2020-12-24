@@ -19,7 +19,7 @@ class VPNStateHandler: FlutterStreamHandler {
 
     static func updateState(_ newState: VPNStates) {
         if let sink = _sink {
-          sink(newState.rawValue)
+            sink(newState.rawValue)
         }
     }
 
