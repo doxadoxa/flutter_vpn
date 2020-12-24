@@ -87,7 +87,7 @@ final class VpnManager: NSObject {
         result(false)
       } else {
         VPNStateHandler.updateState(self.convertState(status: self._vpnManager.connection.status))
-        registerStateObserver()
+        self.registerStateObserver()
         result(true)
       }
     }
@@ -233,7 +233,7 @@ final class VpnManager: NSObject {
   }
 
   private func registerStateObserver() {
-    self._vpnManger.observe(\NEVPNManager.connection.status, options: .new) { status, change in
+    self._vpnManger.connection.status.observe(\NEVPNStatus) { status, change in
       VPNStateHandler.updateState(self.convertState(status))
     }
   }
