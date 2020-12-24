@@ -100,19 +100,7 @@ final class VpnManager: NSObject {
       }
     }
     
-    if self._timer == nil {
-      DispatchQueue.main.async {
-        let timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { timer in
-          print("TIMER RUN")
-          self.state = VpnManager.convertState(status: self._vpnManager.connection.status)
-        }
-        
-        timer.tolerance = 0.5
-              
-        self._timer = timer;
-      }
-    }
-    
+    initTimer()
   }
   
   deinit {
@@ -121,6 +109,7 @@ final class VpnManager: NSObject {
 
   @available(iOS 9.0, *)
   public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString) {
+    
     
     let kcs = KeychainService()
 
@@ -192,8 +181,12 @@ final class VpnManager: NSObject {
                   print("VPN Preferences error: 3")
                   result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } else {
+                  self._timer?.invalidate()
+
                   print("VPN started successfully..")
                   self.updateState(VPNStates.connected)
+
+                  initTimer(5)
                   result(nil)
                 }
               }
@@ -242,6 +235,21 @@ final class VpnManager: NSObject {
   private func updateState(_ state: VPNStates) {
     self.state = state
   }
+
+  private func initTimer(_ delay: Double = 0) {
+     if self._timer == nil {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+          print("TIMER RUN")
+          self.state = VpnManager.convertState(status: self._vpnManager.connection.status)
+        }
+        
+        timer.tolerance = 0.5
+              
+        self._timer = timer;
+      }
+    }
+  }
   
   private static func convertState(status: NEVPNStatus) -> VPNStates {
     switch status {
@@ -261,5 +269,6 @@ final class VpnManager: NSObject {
         return VPNStates.reasserting
     }
   }
+
 }
 
