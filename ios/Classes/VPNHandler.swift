@@ -89,7 +89,7 @@ final class VpnManager: NSObject {
     }
   }
   
-  @available(iOS 9.0, *)
+  @available(iOS 10.0, *)
   func prepare(result: @escaping FlutterResult) {
     self._vpnManager.loadFromPreferences{ (error) -> Void in
       if error != nil {
@@ -107,8 +107,10 @@ final class VpnManager: NSObject {
     self._timer?.invalidate()
   }
 
-  @available(iOS 9.0, *)
-  public func connect(result: @escaping FlutterResult, username: NSString, password: NSString, address: NSString) {
+  @available(iOS 10.0, *)
+  public func connect(result: @escaping FlutterResult, username: String, password: String,
+                      address: String, primaryDNS: String?, secondaryDNS: String?, isOnDemandEnable: Bool = true) {
+
     self._timer?.invalidate()
     self._timer = nil
     
@@ -119,7 +121,6 @@ final class VpnManager: NSObject {
     self._vpnManager.loadFromPreferences { (error) -> Void in
       
       if error != nil {
-        print("VPN Preferences error: 1")
         self.updateState(VPNStates.reasserting)
         result(FlutterError(code: "VPN Load Error", message: error?.localizedDescription, details: nil))
       } else {
@@ -130,7 +131,6 @@ final class VpnManager: NSObject {
         p.username = username as String
         p.remoteIdentifier = address as String
         p.serverAddress = address as String
-        
 
         kcs.save(key: "password", value: password as String)
         p.passwordReference = kcs.load(key: "password")
@@ -140,20 +140,42 @@ final class VpnManager: NSObject {
         p.disconnectOnSleep = false
         p.deadPeerDetectionRate = .low
 
+        p.ikeSecurityAssociationParameters.lifetimeMinutes = 1440
+        p.childSecurityAssociationParameters.lifetimeMinutes = 1440
+
         vpnManager.protocolConfiguration = p
         vpnManager.localizedDescription = self._localizedDescription
         vpnManager.isEnabled = true
-        vpnManager.isOnDemandEnabled = true
+        
+        vpnManager.isOnDemandEnabled = isOnDemandEnable
+        var rules: Array<NEOnDemandRule> = []
 
-        let connectRule = NEOnDemandRuleConnect()
-        connectRule.interfaceTypeMatch = .any
+        if isOnDemandEnable == true {
+          let connectRule = NEOnDemandRuleConnect()
+          connectRule.interfaceTypeMatch = .any
+          rules.append(connectRule)
+        }
 
-        vpnManager.onDemandRules = [connectRule]
-      
+        if primaryDNS != nil && secondaryDNS != nil && !primaryDNS!.isEmpty && !primaryDNS!.isEmpty {
+          vpnManager.isOnDemandEnabled = true
+          
+          let evaluationRule = NEEvaluateConnectionRule(matchDomains: TLD.all, andAction: .connectIfNeeded)
+          evaluationRule.useDNSServers = [primaryDNS!, secondaryDNS!]
+          
+          print(primaryDNS!)
+          print(secondaryDNS!)
+
+          let dnsRule = NEOnDemandRuleEvaluateConnection()
+          dnsRule.connectionRules = [evaluationRule]
+          dnsRule.interfaceTypeMatch = .any
+
+          rules.append(dnsRule)
+        }
+
+        vpnManager.onDemandRules = rules
 
         vpnManager.saveToPreferences { (error) -> Void in
           if error != nil {
-            print("VPN Preferences error: 2")
             self.updateState(VPNStates.reasserting)
             result(FlutterError(code: "Save Error", message: error?.localizedDescription, details: nil))
             
@@ -161,7 +183,6 @@ final class VpnManager: NSObject {
             vpnManager.loadFromPreferences { (error) -> Void in
 
               if error != nil {
-                print("VPN Preferences error: 2")
                 self.updateState(VPNStates.reasserting)
                 result(FlutterError(code: "Reload Error", message: error?.localizedDescription, details: nil))
               } else {
@@ -174,19 +195,15 @@ final class VpnManager: NSObject {
                   self.updateState(VPNStates.reasserting)
                   result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } catch {
-                  print("Fatal Error")
                   fatalError()
                 }
               
                 if startError != nil {
-                  print("VPN Preferences error: 3")
                   result(FlutterError(code: "Start Error", message: startError?.localizedDescription, details: nil))
                 } else {
                   self._timer?.invalidate()
 
-                  print("VPN started successfully..")
                   self.updateState(VPNStates.connected)
-
                   self.initTimer(5.0)
                   result(nil)
                 }
@@ -204,11 +221,7 @@ final class VpnManager: NSObject {
     self._vpnManager.loadFromPreferences {[weak self] (error) -> Void in
       guard let self = self else { return }
       
-      if error != nil {
-        print("vpn load errror")
-      } else {
-        print("vpn load success")
-          
+      if error == nil {
         self._vpnManager.isOnDemandEnabled = false
         self._vpnManager.onDemandRules = []
         
@@ -216,7 +229,6 @@ final class VpnManager: NSObject {
           guard let self = self else { return }
           
           if error != nil {
-            print("VPN Preferences error: 2")
             self.updateState(VPNStates.reasserting)
           } else {
             self.updateState(VPNStates.disconnecting)
@@ -233,15 +245,19 @@ final class VpnManager: NSObject {
     result(VpnManager.convertState(status: status).rawValue)
   }
   
+  public func isOnDemandEnabled(result: @escaping FlutterResult) {
+    result(self._vpnManager.isOnDemandEnabled)
+  }
+  
   private func updateState(_ state: VPNStates) {
     self.state = state
   }
 
+  @available(iOS 10.0, *)
   private func initTimer(_ delay: Double = 0) {
      if self._timer == nil {
       DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-          print("TIMER RUN")
           self.state = VpnManager.convertState(status: self._vpnManager.connection.status)
         }
         
@@ -270,6 +286,5 @@ final class VpnManager: NSObject {
         return VPNStates.reasserting
     }
   }
-
 }
 

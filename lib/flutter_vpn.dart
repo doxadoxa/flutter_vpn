@@ -1,16 +1,14 @@
-/**
- * Copyright (C) 2018 Jason C.H
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- */
+///
+/// Copyright (C) 2018 Jason C.H
+/// This library is free software; you can redistribute it and/or
+/// modify it under the terms of the GNU Lesser General Public
+/// License as published by the Free Software Foundation; either
+/// version 2.1 of the License, or (at your option) any later version.
+///
+/// This library is distributed in the hope that it will be useful,
+/// but WITHOUT ANY WARRANTY; without even the implied warranty of
+/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+/// Lesser General Public License for more details.
 
 import 'dart:io';
 
@@ -95,6 +93,13 @@ class FlutterVpn {
     await _channel.invokeMethod('disconnect');
   }
 
+  /// Get "On-demand" iOS state
+  /// Return false for Android
+  static Future<bool> isOnDemandEnabled() async {
+    if (!Platform.isIOS) return false;
+    return await _channel.invokeMethod('isOnDemandEnabled');
+  }
+
   /// Connect to VPN.
   ///
   /// Use given credentials to connect VPN (ikev2-eap).
@@ -108,6 +113,21 @@ class FlutterVpn {
       'username': username,
       'password': password,
       'mtu': mtu.toString()
+    });
+  }
+
+  static Future<Null> connect(String address, String username, String password,
+      {int mtu = 1400,
+      List<String> dns,
+      bool isOnDemandEnabled = false}) async {
+    await _channel.invokeMethod('connect', {
+      'address': address,
+      'username': username,
+      'password': password,
+      'mtu': mtu.toString(),
+      'primaryDNS': dns?.first ?? null,
+      'secondaryDNS': dns?.last ?? null,
+      'onDemandEnable': isOnDemandEnabled
     });
   }
 }

@@ -15,7 +15,7 @@
 import Flutter
 import UIKit
 
-@available(iOS 9.0, *)
+@available(iOS 10.0, *)
 public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_vpn", binaryMessenger: registrar.messenger())
@@ -23,21 +23,38 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
     
     let instance = SwiftFlutterVpnPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
-    stateChannel.setStreamHandler(VPNStateHandler() as! FlutterStreamHandler & NSObjectProtocol)
+    stateChannel.setStreamHandler(VPNStateHandler() as? FlutterStreamHandler & NSObjectProtocol)
     
     let manager = VpnManager()
     
     channel.setMethodCallHandler {
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
       if call.method == "connect" {
-        let args = call.arguments! as! [NSString: NSString]
-        manager.connect(result: result, username: args["username"]!, password: args["password"]!, address: args["address"]!)
+        let args = call.arguments! as! [NSString: Any]
+        let isOnDemandEnabled = args["onDemandEnable"] as? Int != nil ? args["onDemandEnable"] as! Int == 1 : true
+        
+        let primaryDNS = args["primaryDNS"] is NSNull ? nil : args["primaryDNS"] as? String
+        let secondaryDNS = args["secondaryDNS"] is NSNull ? nil : args["secondaryDNS"] as? String
+      
+        print(args)
+
+        manager.connect(
+          result: result,
+          username: args["username"]! as! String,
+          password: args["password"]! as! String,
+          address: args["address"]! as! String,
+          primaryDNS: primaryDNS,
+          secondaryDNS: secondaryDNS,
+          isOnDemandEnable: isOnDemandEnabled
+        )
       } else if call.method == "disconnect" {
         manager.disconnect(result: result)
       } else if call.method == "getCurrentState" {
         manager.getState(result: result)
       } else if call.method == "initManager" || call.method == "prepare" {
         manager.prepare(result: result)
+      } else if call.method == "isOnDemandEnabled" {
+        manager.isOnDemandEnabled(result: result)
       }
     }
   }
