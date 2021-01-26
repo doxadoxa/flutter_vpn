@@ -109,7 +109,7 @@ final class VpnManager: NSObject {
 
   @available(iOS 10.0, *)
   public func connect(result: @escaping FlutterResult, username: String, password: String,
-                      address: String, primaryDNS: String?, secondaryDNS: String?, isOnDemandEnable: Bool = true) {
+                      address: String, primaryDNS: String?, secondaryDNS: String?, isOnDemandEnable: Bool = true, enablePFS: Bool = true) {
 
     self._timer?.invalidate()
     self._timer = nil
@@ -142,6 +142,7 @@ final class VpnManager: NSObject {
 
         p.ikeSecurityAssociationParameters.lifetimeMinutes = 1440
         p.childSecurityAssociationParameters.lifetimeMinutes = 1440
+        p.enablePFS = enablePFS;
 
         vpnManager.protocolConfiguration = p
         vpnManager.localizedDescription = self._localizedDescription

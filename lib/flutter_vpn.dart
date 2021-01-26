@@ -119,7 +119,8 @@ class FlutterVpn {
   static Future<Null> connect(String address, String username, String password,
       {int mtu = 1400,
       List<String> dns,
-      bool isOnDemandEnabled = false}) async {
+      bool isOnDemandEnabled = false,
+      bool enablePFS = false}) async {
     await _channel.invokeMethod('connect', {
       'address': address,
       'username': username,
@@ -127,7 +128,8 @@ class FlutterVpn {
       'mtu': mtu.toString(),
       'primaryDNS': dns?.first ?? null,
       'secondaryDNS': dns?.last ?? null,
-      'onDemandEnable': isOnDemandEnabled
+      'onDemandEnable': isOnDemandEnabled,
+      'enablePFS': enablePFS
     });
   }
 }

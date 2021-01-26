@@ -35,8 +35,8 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
         
         let primaryDNS = args["primaryDNS"] is NSNull ? nil : args["primaryDNS"] as? String
         let secondaryDNS = args["secondaryDNS"] is NSNull ? nil : args["secondaryDNS"] as? String
-      
-        print(args)
+        
+        let enablePFS = args["enablePFS"] as? Int != nil ? args["enablePFS"] as! Int == 1 : true;
 
         manager.connect(
           result: result,
@@ -45,7 +45,8 @@ public class SwiftFlutterVpnPlugin: NSObject, FlutterPlugin {
           address: args["address"]! as! String,
           primaryDNS: primaryDNS,
           secondaryDNS: secondaryDNS,
-          isOnDemandEnable: isOnDemandEnabled
+          isOnDemandEnable: isOnDemandEnabled,
+          enablePFS: enablePFS
         )
       } else if call.method == "disconnect" {
         manager.disconnect(result: result)
